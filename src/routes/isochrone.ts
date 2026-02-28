@@ -8,7 +8,7 @@ const ORS_API_KEY = process.env.ORS_API_KEY || '';
 const GEOAPIFY_API_KEY = process.env.GEOAPIFY_API_KEY || '';
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../../data');
 const CACHE_PATH = path.join(DATA_DIR, 'isochrone-cache.json');
-const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // ── Cache helpers ──
 

@@ -57,6 +57,8 @@ window.Isochrone = (function () {
       if (!providerStatus.driving) drivingBtn.title = 'Set ORS_API_KEY to enable';
       if (!providerStatus.transit) transitBtn.title = 'Set GEOAPIFY_API_KEY to enable';
     }
+    // Hide traffic selector until driving mode is active
+    document.getElementById('iso-traffic').style.display = 'none';
   }
 
   /* ────────────────── Events ────────────────── */
@@ -166,9 +168,10 @@ window.Isochrone = (function () {
     statusEl.textContent = `Loading ${mode} isochrone (30–60 min${trafficLabel})...`;
     statusEl.classList.remove('hidden');
 
-    // Highlight active button
+    // Highlight active button, show/hide traffic selector
     document.getElementById('iso-driving-btn').classList.toggle('active', mode === 'driving');
     document.getElementById('iso-transit-btn').classList.toggle('active', mode === 'transit');
+    document.getElementById('iso-traffic').style.display = mode === 'driving' ? '' : 'none';
     activeMode = mode;
 
     try {
