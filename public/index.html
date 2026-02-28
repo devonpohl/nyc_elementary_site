@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NYC Elementary Schools Explorer</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Login modal -->
+  <div id="login-modal" class="login-modal">
+    <div class="login-modal-content">
+      <h2>NYC Schools Explorer</h2>
+      <p>Enter your name to get started</p>
+      <form id="login-form">
+        <input
+          type="text"
+          id="login-input"
+          placeholder="Your name..."
+          required
+          minlength="1"
+          maxlength="50"
+          autocomplete="off"
+          autofocus
+        >
+        <button type="submit" class="login-btn">Enter</button>
+      </form>
+      <div id="login-error" class="login-error hidden"></div>
+    </div>
+  </div>
+
+  <div id="app" class="hidden">
+    <div id="map-container">
+      <div id="map"></div>
+      <div id="map-controls">
+        <button id="toggle-zones" class="map-btn active" title="Toggle zone polygons">Zones</button>
+        <button id="toggle-schools" class="map-btn active" title="Toggle school markers">Schools</button>
+        <button id="toggle-subway" class="map-btn" title="Toggle subway lines and stations">Subway</button>
+        <button id="toggle-housing" class="map-btn" title="Toggle housing listings" disabled>Housing</button>
+      </div>
+    </div>
+
+    <div id="sidebar">
+      <div id="sidebar-header">
+        <div id="sidebar-header-left">
+          <h1>NYC Schools</h1>
+          <span id="user-badge" class="user-badge"></span>
+        </div>
+        <div id="sidebar-header-right">
+          <button id="logout-btn" class="logout-btn" title="Switch user">Switch</button>
+          <button id="sidebar-toggle" title="Collapse sidebar">&rsaquo;</button>
+        </div>
+      </div>
+
+      <div id="sidebar-content">
+        <!-- Search -->
+        <div id="search-section">
+          <input type="text" id="search-input" placeholder="Search schools by name or address...">
+          <div id="search-results"></div>
+        </div>
+
+        <!-- School detail panel (hidden until selection) -->
+        <div id="detail-panel" class="hidden">
+          <div id="detail-header">
+            <h2 id="detail-name"></h2>
+            <button id="detail-close" title="Close">&times;</button>
+          </div>
+          <div id="detail-body">
+            <div class="detail-row"><span class="detail-label">Address</span><span id="detail-address"></span></div>
+            <div class="detail-row"><span class="detail-label">District</span><span id="detail-district"></span></div>
+            <div class="detail-row"><span class="detail-label">Grades</span><span id="detail-grades"></span></div>
+            <div class="detail-row"><span class="detail-label">Principal</span><span id="detail-principal"></span></div>
+            <div class="detail-row"><span class="detail-label">Phone</span><span id="detail-phone"></span></div>
+            <div class="detail-row"><span class="detail-label">Neighborhood</span><span id="detail-nta"></span></div>
+            <div class="detail-row"><span class="detail-label">Status</span><span id="detail-status"></span></div>
+          </div>
+
+          <!-- Test Scores -->
+          <div id="detail-scores" class="hidden">
+            <div class="scores-header">State Test Results (Grades 3-8)</div>
+            <div class="scores-columns">
+              <div class="scores-col" id="scores-ela">
+                <div class="scores-subject">ELA</div>
+                <div class="scores-headline" id="scores-ela-pct">-</div>
+                <div class="scores-label">% proficient</div>
+                <div class="scores-grades" id="scores-ela-grades"></div>
+                <div class="scores-trend" id="scores-ela-trend"></div>
+              </div>
+              <div class="scores-divider"></div>
+              <div class="scores-col" id="scores-math">
+                <div class="scores-subject">Math</div>
+                <div class="scores-headline" id="scores-math-pct">-</div>
+                <div class="scores-label">% proficient</div>
+                <div class="scores-grades" id="scores-math-grades"></div>
+                <div class="scores-trend" id="scores-math-trend"></div>
+              </div>
+            </div>
+            <div class="scores-meta" id="scores-meta"></div>
+          </div>
+
+          <div id="detail-actions">
+            <label for="preference-select">Preference:</label>
+            <select id="preference-select">
+              <option value="">- None -</option>
+              <option value="top-choice">* Top Choice</option>
+              <option value="strong">* Strong Interest</option>
+              <option value="interested">* Interested</option>
+              <option value="not-interested">* Not Interested</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Isochrone controls -->
+        <div id="isochrone-section">
+          <h3>Travel Time</h3>
+          <form id="iso-address-form">
+            <input type="text" id="iso-address-input" placeholder="Enter origin address...">
+          </form>
+          <div id="iso-controls">
+            <button id="iso-driving-btn" class="iso-mode-btn" disabled>Driving</button>
+            <button id="iso-transit-btn" class="iso-mode-btn" disabled>Transit</button>
+            <button id="iso-clear-btn" class="iso-clear-btn" title="Clear isochrone">&times;</button>
+          </div>
+          <div id="iso-traffic">
+            <label class="iso-traffic-label">Traffic:</label>
+            <select id="iso-traffic-select">
+              <option value="0.5" selected>Heavy</option>
+              <option value="0.65">Moderate</option>
+              <option value="0.85">Light</option>
+              <option value="1.0">None (free-flow)</option>
+            </select>
+          </div>
+          <div id="iso-status" class="hidden"></div>
+          <div id="iso-legend" class="hidden"></div>
+        </div>
+
+        <!-- Housing filters (hidden until toggle) -->
+        <div id="housing-section">
+          <h3>Housing</h3>
+          <div id="housing-status" class="hidden"></div>
+          <div id="housing-filters" class="hidden">
+            <div class="housing-filter-row">
+              <label>Status</label>
+              <select id="housing-status-filter">
+                <option value="both">For Sale &amp; Sold</option>
+                <option value="for_sale">For Sale Only</option>
+                <option value="recently_sold">Recently Sold Only</option>
+              </select>
+            </div>
+            <div class="housing-filter-row">
+              <label>Price</label>
+              <div class="housing-range-inputs">
+                <input type="number" id="housing-price-min" placeholder="Min" step="50000">
+                <span class="range-sep">-</span>
+                <input type="number" id="housing-price-max" placeholder="Max" step="50000">
+              </div>
+            </div>
+            <div class="housing-filter-row">
+              <label>Beds</label>
+              <select id="housing-beds-min">
+                <option value="">Any</option>
+                <option value="0">Studio+</option>
+                <option value="1">1+</option>
+                <option value="2">2+</option>
+                <option value="3">3+</option>
+                <option value="4">4+</option>
+              </select>
+            </div>
+            <div class="housing-filter-row">
+              <label>Sqft</label>
+              <div class="housing-range-inputs">
+                <input type="number" id="housing-sqft-min" placeholder="Min" step="100">
+                <span class="range-sep">-</span>
+                <input type="number" id="housing-sqft-max" placeholder="Max" step="100">
+              </div>
+            </div>
+            <div class="housing-filter-legend">
+              <span class="housing-legend-item"><span class="housing-legend-dot for-sale"></span>For Sale</span>
+              <span class="housing-legend-item"><span class="housing-legend-dot sold"></span>Recently Sold</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Favorites list -->
+        <div id="favorites-section">
+          <h3>Favorites</h3>
+          <div id="favorites-list">
+            <p class="empty-state">No favorites yet. Click a school and set a preference level.</p>
+          </div>
+        </div>
+
+        <!-- Data Sources -->
+        <div id="sources-section">
+          <button id="sources-toggle" class="sources-toggle-btn">Data Sources &amp; Attribution</button>
+          <div id="sources-body" class="sources-body hidden">
+
+            <div class="source-item">
+              <div class="source-name">School Locations</div>
+              <div class="source-detail">
+                NYC Department of Education via
+                <a href="https://data.cityofnewyork.us" target="_blank" rel="noopener">NYC Open Data</a>.
+                Point locations for all NYC public elementary schools with DBN identifiers, grades served, principal, address, and neighborhood (NTA).
+                Loaded as static GeoJSON; 1,030 schools.
+              </div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-name">School Zone Boundaries</div>
+              <div class="source-detail">
+                NYC DOE
+                <a href="https://data.cityofnewyork.us/Education/School-Zones-2024-2025-Elementary-School-/drh3-e2fd" target="_blank" rel="noopener">2024-2025 Elementary School Zones</a>.
+                Polygon boundaries joined to schools by DBN/system_code.
+              </div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-name">Test Scores</div>
+              <div class="source-detail">
+                NYC DOE
+                <a href="https://infohub.nyced.org/reports/academics/test-results" target="_blank" rel="noopener">InfoHub</a>
+                NYS Grades 3-8 ELA &amp; Math assessment results.
+                Excel files downloaded and processed via Python (openpyxl) into per-school JSON keyed by DBN, year, subject, and grade.
+                Proficiency = % scoring Level 3 + Level 4.
+                Currently using seed data; replace with real InfoHub download via <code>scripts/download-scores.sh</code> and <code>scripts/process-scores.py</code>.
+              </div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-name">Subway Lines &amp; Stations</div>
+              <div class="source-detail">
+                <a href="https://data.cityofnewyork.us/Transportation/Subway-Lines/3qz8-muuu" target="_blank" rel="noopener">NYC Open Data</a>
+                via ArcGIS REST API
+                (<a href="https://services6.arcgis.com/yG5s3afENB5iO9fj/arcgis/rest/services/Subway_view/FeatureServer/0" target="_blank" rel="noopener">lines</a>,
+                <a href="https://services6.arcgis.com/yG5s3afENB5iO9fj/arcgis/rest/services/SubwayStation_view/FeatureServer/0" target="_blank" rel="noopener">stations</a>).
+                Fetched client-side with pagination (resultOffset). MTA route colors mapped from line designations.
+              </div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-name">Housing Listings</div>
+              <div class="source-detail">
+                <a href="https://rapidapi.com/apidojo/api/realty-in-us" target="_blank" rel="noopener">Realty in US API</a>
+                via RapidAPI (apidojo). For-sale and recently-sold listings queried by zip code
+                (11231, 11201, 11205, 11238, 11215, 11217, 11216).
+                Filtered server-side to 3+ bed, 1,500+ sqft; sold homes limited to last 12 months.
+                Cached daily in <code>data/housing-cache.json</code>. Deduplicated by property ID.
+              </div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-name">Driving Isochrones</div>
+              <div class="source-detail">
+                <a href="https://openrouteservice.org/" target="_blank" rel="noopener">OpenRouteService</a>
+                <code>/v2/isochrones/driving-car</code>.
+                Time-based isochrone polygons at 10/20/30/45-min intervals. Congestion scaling factor applied client-side (0.5x-1.0x speed).
+              </div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-name">Transit Isochrones</div>
+              <div class="source-detail">
+                <a href="https://traveltime.com/" target="_blank" rel="noopener">TravelTime API</a>
+                <code>/v4/time-map</code>.
+                Public transport isochrones incorporating subway, bus, and walking. Requires approved API key.
+              </div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-name">Geocoding</div>
+              <div class="source-detail">
+                <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap Nominatim</a>.
+                Client-side address lookup bounded to NYC metro area. Used for isochrone origin input.
+              </div>
+            </div>
+
+            <div class="source-item">
+              <div class="source-name">Base Map</div>
+              <div class="source-detail">
+                <a href="https://carto.com/basemaps" target="_blank" rel="noopener">CARTO Voyager</a>
+                vector tiles rendered via
+                <a href="https://maplibre.org/" target="_blank" rel="noopener">MapLibre GL JS</a>.
+                Open-source, no API key required.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/map.js"></script>
+  <script src="/js/favorites.js"></script>
+  <script src="/js/isochrone.js"></script>
+  <script src="/js/subway.js"></script>
+  <script src="/js/housing.js"></script>
+  <script>
+    (async function () {
+      const loginModal = document.getElementById('login-modal');
+      const loginForm = document.getElementById('login-form');
+      const loginInput = document.getElementById('login-input');
+      const loginError = document.getElementById('login-error');
+      const appEl = document.getElementById('app');
+
+      // Check if already logged in
+      const username = await Auth.checkSession();
+
+      if (username) {
+        loginModal.classList.add('hidden');
+        appEl.classList.remove('hidden');
+        initApp(username);
+      } else {
+        // Show login modal
+        loginModal.classList.remove('hidden');
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          loginError.classList.add('hidden');
+          const entered = loginInput.value.trim();
+          if (!entered) return;
+
+          try {
+            const normalized = await Auth.login(entered);
+            loginModal.classList.add('hidden');
+            appEl.classList.remove('hidden');
+            initApp(normalized);
+          } catch (err) {
+            loginError.textContent = err.message || 'Login failed';
+            loginError.classList.remove('hidden');
+          }
+        });
+      }
+
+      function initApp(user) {
+        // Show username badge
+        document.getElementById('user-badge').textContent = user;
+
+        // Logout / switch user
+        document.getElementById('logout-btn').addEventListener('click', () => {
+          Auth.logout();
+        });
+
+        // Sources toggle
+        document.getElementById('sources-toggle').addEventListener('click', () => {
+          document.getElementById('sources-body').classList.toggle('hidden');
+        });
+
+        SchoolMap.init();
+        Favorites.init();
+        Isochrone.init();
+        Subway.init();
+        Housing.init();
+      }
+    })();
+  </script>
+</body>
+</html>

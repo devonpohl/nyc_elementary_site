@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+
+# User data — lives on Railway volume, not in repo
+data/favorites.json
+data/housing-cache.json
+
+# Raw source GeoJSON (processed versions are in data/)
+*.geojson
+!data/*.geojson
+
+# Scripts only needed locally
+scripts/

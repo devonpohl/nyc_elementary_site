@@ -1,0 +1,226 @@
+{
+  "15K010": {
+    "2024": {
+      "ELA": {"3":{"tested":68,"pct_proficient":71.2},"4":{"tested":65,"pct_proficient":74.5},"5":{"tested":70,"pct_proficient":69.8},"All":{"tested":203,"pct_proficient":71.8}},
+      "Math":{"3":{"tested":68,"pct_proficient":73.5},"4":{"tested":65,"pct_proficient":70.1},"5":{"tested":70,"pct_proficient":65.4},"All":{"tested":203,"pct_proficient":69.7}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":62,"pct_proficient":68.3},"4":{"tested":60,"pct_proficient":71.0},"5":{"tested":64,"pct_proficient":66.5},"All":{"tested":186,"pct_proficient":68.6}},
+      "Math":{"3":{"tested":62,"pct_proficient":70.2},"4":{"tested":60,"pct_proficient":67.8},"5":{"tested":64,"pct_proficient":62.1},"All":{"tested":186,"pct_proficient":66.7}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":58,"pct_proficient":64.1},"4":{"tested":55,"pct_proficient":67.2},"5":{"tested":60,"pct_proficient":63.8},"All":{"tested":173,"pct_proficient":65.0}},
+      "Math":{"3":{"tested":58,"pct_proficient":66.4},"4":{"tested":55,"pct_proficient":63.5},"5":{"tested":60,"pct_proficient":58.9},"All":{"tested":173,"pct_proficient":62.9}}
+    }
+  },
+  "13K011": {
+    "2024": {
+      "ELA": {"3":{"tested":55,"pct_proficient":62.4},"4":{"tested":52,"pct_proficient":65.8},"5":{"tested":48,"pct_proficient":60.1},"All":{"tested":155,"pct_proficient":62.8}},
+      "Math":{"3":{"tested":55,"pct_proficient":58.7},"4":{"tested":52,"pct_proficient":55.3},"5":{"tested":48,"pct_proficient":52.8},"All":{"tested":155,"pct_proficient":55.6}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":50,"pct_proficient":59.1},"4":{"tested":48,"pct_proficient":62.5},"5":{"tested":45,"pct_proficient":57.3},"All":{"tested":143,"pct_proficient":59.6}},
+      "Math":{"3":{"tested":50,"pct_proficient":55.2},"4":{"tested":48,"pct_proficient":52.0},"5":{"tested":45,"pct_proficient":49.5},"All":{"tested":143,"pct_proficient":52.2}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":47,"pct_proficient":55.8},"4":{"tested":45,"pct_proficient":58.9},"5":{"tested":43,"pct_proficient":54.0},"All":{"tested":135,"pct_proficient":56.2}},
+      "Math":{"3":{"tested":47,"pct_proficient":51.0},"4":{"tested":45,"pct_proficient":48.7},"5":{"tested":43,"pct_proficient":45.2},"All":{"tested":135,"pct_proficient":48.3}}
+    }
+  },
+  "15K321": {
+    "2024": {
+      "ELA": {"3":{"tested":105,"pct_proficient":82.3},"4":{"tested":100,"pct_proficient":85.1},"5":{"tested":98,"pct_proficient":80.7},"All":{"tested":303,"pct_proficient":82.7}},
+      "Math":{"3":{"tested":105,"pct_proficient":84.6},"4":{"tested":100,"pct_proficient":81.2},"5":{"tested":98,"pct_proficient":77.5},"All":{"tested":303,"pct_proficient":81.1}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":100,"pct_proficient":79.8},"4":{"tested":96,"pct_proficient":82.4},"5":{"tested":95,"pct_proficient":78.1},"All":{"tested":291,"pct_proficient":80.1}},
+      "Math":{"3":{"tested":100,"pct_proficient":82.0},"4":{"tested":96,"pct_proficient":78.5},"5":{"tested":95,"pct_proficient":74.8},"All":{"tested":291,"pct_proficient":78.4}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":97,"pct_proficient":76.5},"4":{"tested":92,"pct_proficient":79.2},"5":{"tested":90,"pct_proficient":74.9},"All":{"tested":279,"pct_proficient":76.9}},
+      "Math":{"3":{"tested":97,"pct_proficient":78.3},"4":{"tested":92,"pct_proficient":75.1},"5":{"tested":90,"pct_proficient":71.2},"All":{"tested":279,"pct_proficient":74.9}}
+    }
+  },
+  "75K372": {
+    "2024": {
+      "ELA": {"3":{"tested":42,"pct_proficient":45.2},"4":{"tested":38,"pct_proficient":48.7},"5":{"tested":40,"pct_proficient":42.1},"All":{"tested":120,"pct_proficient":45.3}},
+      "Math":{"3":{"tested":42,"pct_proficient":40.5},"4":{"tested":38,"pct_proficient":43.2},"5":{"tested":40,"pct_proficient":38.8},"All":{"tested":120,"pct_proficient":40.8}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":40,"pct_proficient":42.0},"4":{"tested":36,"pct_proficient":45.1},"5":{"tested":38,"pct_proficient":39.5},"All":{"tested":114,"pct_proficient":42.2}},
+      "Math":{"3":{"tested":40,"pct_proficient":37.8},"4":{"tested":36,"pct_proficient":40.0},"5":{"tested":38,"pct_proficient":35.2},"All":{"tested":114,"pct_proficient":37.7}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":38,"pct_proficient":39.5},"4":{"tested":35,"pct_proficient":42.3},"5":{"tested":37,"pct_proficient":36.8},"All":{"tested":110,"pct_proficient":39.5}},
+      "Math":{"3":{"tested":38,"pct_proficient":34.2},"4":{"tested":35,"pct_proficient":37.1},"5":{"tested":37,"pct_proficient":32.4},"All":{"tested":110,"pct_proficient":34.6}}
+    }
+  },
+  "15K107": {
+    "2024": {
+      "ELA": {"3":{"tested":72,"pct_proficient":76.8},"4":{"tested":68,"pct_proficient":79.5},"5":{"tested":70,"pct_proficient":74.2},"All":{"tested":210,"pct_proficient":76.8}},
+      "Math":{"3":{"tested":72,"pct_proficient":78.1},"4":{"tested":68,"pct_proficient":74.8},"5":{"tested":70,"pct_proficient":70.5},"All":{"tested":210,"pct_proficient":74.5}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":70,"pct_proficient":73.5},"4":{"tested":65,"pct_proficient":76.2},"5":{"tested":67,"pct_proficient":71.0},"All":{"tested":202,"pct_proficient":73.6}},
+      "Math":{"3":{"tested":70,"pct_proficient":75.0},"4":{"tested":65,"pct_proficient":71.5},"5":{"tested":67,"pct_proficient":67.8},"All":{"tested":202,"pct_proficient":71.4}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":65,"pct_proficient":70.2},"4":{"tested":62,"pct_proficient":73.1},"5":{"tested":64,"pct_proficient":68.5},"All":{"tested":191,"pct_proficient":70.6}},
+      "Math":{"3":{"tested":65,"pct_proficient":72.0},"4":{"tested":62,"pct_proficient":68.2},"5":{"tested":64,"pct_proficient":64.5},"All":{"tested":191,"pct_proficient":68.2}}
+    }
+  },
+  "15K039": {
+    "2024": {
+      "ELA": {"3":{"tested":60,"pct_proficient":73.2},"4":{"tested":58,"pct_proficient":76.0},"5":{"tested":55,"pct_proficient":70.5},"All":{"tested":173,"pct_proficient":73.2}},
+      "Math":{"3":{"tested":60,"pct_proficient":75.0},"4":{"tested":58,"pct_proficient":71.8},"5":{"tested":55,"pct_proficient":67.3},"All":{"tested":173,"pct_proficient":71.4}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":56,"pct_proficient":70.1},"4":{"tested":54,"pct_proficient":73.2},"5":{"tested":52,"pct_proficient":67.8},"All":{"tested":162,"pct_proficient":70.4}},
+      "Math":{"3":{"tested":56,"pct_proficient":72.1},"4":{"tested":54,"pct_proficient":68.5},"5":{"tested":52,"pct_proficient":64.0},"All":{"tested":162,"pct_proficient":68.2}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":53,"pct_proficient":66.8},"4":{"tested":50,"pct_proficient":69.5},"5":{"tested":48,"pct_proficient":64.2},"All":{"tested":151,"pct_proficient":66.8}},
+      "Math":{"3":{"tested":53,"pct_proficient":68.5},"4":{"tested":50,"pct_proficient":65.0},"5":{"tested":48,"pct_proficient":60.8},"All":{"tested":151,"pct_proficient":64.8}}
+    }
+  },
+  "15K118": {
+    "2024": {
+      "ELA": {"3":{"tested":48,"pct_proficient":58.5},"4":{"tested":45,"pct_proficient":62.0},"5":{"tested":43,"pct_proficient":55.8},"All":{"tested":136,"pct_proficient":58.8}},
+      "Math":{"3":{"tested":48,"pct_proficient":55.2},"4":{"tested":45,"pct_proficient":52.0},"5":{"tested":43,"pct_proficient":48.5},"All":{"tested":136,"pct_proficient":51.9}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":45,"pct_proficient":55.0},"4":{"tested":42,"pct_proficient":58.5},"5":{"tested":40,"pct_proficient":52.5},"All":{"tested":127,"pct_proficient":55.3}},
+      "Math":{"3":{"tested":45,"pct_proficient":52.0},"4":{"tested":42,"pct_proficient":49.0},"5":{"tested":40,"pct_proficient":45.2},"All":{"tested":127,"pct_proficient":48.7}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":42,"pct_proficient":51.5},"4":{"tested":40,"pct_proficient":55.0},"5":{"tested":38,"pct_proficient":49.0},"All":{"tested":120,"pct_proficient":51.8}},
+      "Math":{"3":{"tested":42,"pct_proficient":48.5},"4":{"tested":40,"pct_proficient":45.5},"5":{"tested":38,"pct_proficient":41.8},"All":{"tested":120,"pct_proficient":45.3}}
+    }
+  },
+  "15K154": {
+    "2024": {
+      "ELA": {"3":{"tested":55,"pct_proficient":68.5},"4":{"tested":52,"pct_proficient":72.0},"5":{"tested":50,"pct_proficient":65.8},"All":{"tested":157,"pct_proficient":68.8}},
+      "Math":{"3":{"tested":55,"pct_proficient":70.2},"4":{"tested":52,"pct_proficient":66.8},"5":{"tested":50,"pct_proficient":62.5},"All":{"tested":157,"pct_proficient":66.5}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":52,"pct_proficient":65.2},"4":{"tested":50,"pct_proficient":68.5},"5":{"tested":48,"pct_proficient":62.0},"All":{"tested":150,"pct_proficient":65.2}},
+      "Math":{"3":{"tested":52,"pct_proficient":67.0},"4":{"tested":50,"pct_proficient":63.5},"5":{"tested":48,"pct_proficient":59.0},"All":{"tested":150,"pct_proficient":63.2}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":48,"pct_proficient":61.8},"4":{"tested":46,"pct_proficient":65.0},"5":{"tested":44,"pct_proficient":58.5},"All":{"tested":138,"pct_proficient":61.8}},
+      "Math":{"3":{"tested":48,"pct_proficient":63.5},"4":{"tested":46,"pct_proficient":60.0},"5":{"tested":44,"pct_proficient":55.5},"All":{"tested":138,"pct_proficient":59.7}}
+    }
+  },
+  "13K009": {
+    "2024": {
+      "ELA": {"3":{"tested":50,"pct_proficient":55.2},"4":{"tested":48,"pct_proficient":58.0},"5":{"tested":45,"pct_proficient":52.5},"All":{"tested":143,"pct_proficient":55.2}},
+      "Math":{"3":{"tested":50,"pct_proficient":52.0},"4":{"tested":48,"pct_proficient":48.5},"5":{"tested":45,"pct_proficient":45.0},"All":{"tested":143,"pct_proficient":48.5}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":48,"pct_proficient":52.0},"4":{"tested":45,"pct_proficient":55.5},"5":{"tested":43,"pct_proficient":49.8},"All":{"tested":136,"pct_proficient":52.4}},
+      "Math":{"3":{"tested":48,"pct_proficient":49.0},"4":{"tested":45,"pct_proficient":45.5},"5":{"tested":43,"pct_proficient":42.0},"All":{"tested":136,"pct_proficient":45.5}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":45,"pct_proficient":48.5},"4":{"tested":42,"pct_proficient":52.0},"5":{"tested":40,"pct_proficient":46.2},"All":{"tested":127,"pct_proficient":48.9}},
+      "Math":{"3":{"tested":45,"pct_proficient":45.5},"4":{"tested":42,"pct_proficient":42.0},"5":{"tested":40,"pct_proficient":38.5},"All":{"tested":127,"pct_proficient":42.0}}
+    }
+  },
+  "17K316": {
+    "2024": {
+      "ELA": {"3":{"tested":62,"pct_proficient":42.5},"4":{"tested":58,"pct_proficient":45.8},"5":{"tested":55,"pct_proficient":39.2},"All":{"tested":175,"pct_proficient":42.5}},
+      "Math":{"3":{"tested":62,"pct_proficient":38.0},"4":{"tested":58,"pct_proficient":35.2},"5":{"tested":55,"pct_proficient":31.5},"All":{"tested":175,"pct_proficient":34.9}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":58,"pct_proficient":39.5},"4":{"tested":55,"pct_proficient":42.0},"5":{"tested":52,"pct_proficient":36.5},"All":{"tested":165,"pct_proficient":39.3}},
+      "Math":{"3":{"tested":58,"pct_proficient":35.0},"4":{"tested":55,"pct_proficient":32.5},"5":{"tested":52,"pct_proficient":28.8},"All":{"tested":165,"pct_proficient":32.1}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":55,"pct_proficient":36.0},"4":{"tested":52,"pct_proficient":38.5},"5":{"tested":50,"pct_proficient":33.0},"All":{"tested":157,"pct_proficient":35.8}},
+      "Math":{"3":{"tested":55,"pct_proficient":31.5},"4":{"tested":52,"pct_proficient":29.0},"5":{"tested":50,"pct_proficient":25.5},"All":{"tested":157,"pct_proficient":28.7}}
+    }
+  },
+  "13K133": {
+    "2024": {
+      "ELA": {"3":{"tested":75,"pct_proficient":70.5},"4":{"tested":72,"pct_proficient":73.8},"5":{"tested":68,"pct_proficient":67.2},"All":{"tested":215,"pct_proficient":70.5}},
+      "Math":{"3":{"tested":75,"pct_proficient":72.0},"4":{"tested":72,"pct_proficient":68.5},"5":{"tested":68,"pct_proficient":64.0},"All":{"tested":215,"pct_proficient":68.2}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":70,"pct_proficient":67.2},"4":{"tested":68,"pct_proficient":70.5},"5":{"tested":65,"pct_proficient":64.0},"All":{"tested":203,"pct_proficient":67.2}},
+      "Math":{"3":{"tested":70,"pct_proficient":69.0},"4":{"tested":68,"pct_proficient":65.2},"5":{"tested":65,"pct_proficient":61.0},"All":{"tested":203,"pct_proficient":65.1}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":65,"pct_proficient":63.8},"4":{"tested":62,"pct_proficient":67.0},"5":{"tested":60,"pct_proficient":60.5},"All":{"tested":187,"pct_proficient":63.8}},
+      "Math":{"3":{"tested":65,"pct_proficient":65.5},"4":{"tested":62,"pct_proficient":61.8},"5":{"tested":60,"pct_proficient":57.5},"All":{"tested":187,"pct_proficient":61.6}}
+    }
+  },
+  "13K282": {
+    "2024": {
+      "ELA": {"3":{"tested":58,"pct_proficient":52.0},"4":{"tested":55,"pct_proficient":55.5},"5":{"tested":52,"pct_proficient":49.0},"All":{"tested":165,"pct_proficient":52.2}},
+      "Math":{"3":{"tested":58,"pct_proficient":48.5},"4":{"tested":55,"pct_proficient":45.0},"5":{"tested":52,"pct_proficient":41.5},"All":{"tested":165,"pct_proficient":45.0}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":55,"pct_proficient":49.0},"4":{"tested":52,"pct_proficient":52.0},"5":{"tested":50,"pct_proficient":46.0},"All":{"tested":157,"pct_proficient":49.0}},
+      "Math":{"3":{"tested":55,"pct_proficient":45.5},"4":{"tested":52,"pct_proficient":42.0},"5":{"tested":50,"pct_proficient":38.5},"All":{"tested":157,"pct_proficient":42.0}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":52,"pct_proficient":45.5},"4":{"tested":50,"pct_proficient":48.0},"5":{"tested":48,"pct_proficient":42.5},"All":{"tested":150,"pct_proficient":45.3}},
+      "Math":{"3":{"tested":52,"pct_proficient":42.0},"4":{"tested":50,"pct_proficient":38.5},"5":{"tested":48,"pct_proficient":35.0},"All":{"tested":150,"pct_proficient":38.5}}
+    }
+  },
+  "13K020": {
+    "2024": {
+      "ELA": {"3":{"tested":65,"pct_proficient":48.5},"4":{"tested":60,"pct_proficient":52.0},"5":{"tested":58,"pct_proficient":45.5},"All":{"tested":183,"pct_proficient":48.7}},
+      "Math":{"3":{"tested":65,"pct_proficient":44.0},"4":{"tested":60,"pct_proficient":40.5},"5":{"tested":58,"pct_proficient":37.0},"All":{"tested":183,"pct_proficient":40.5}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":62,"pct_proficient":45.0},"4":{"tested":58,"pct_proficient":48.5},"5":{"tested":55,"pct_proficient":42.0},"All":{"tested":175,"pct_proficient":45.2}},
+      "Math":{"3":{"tested":62,"pct_proficient":41.0},"4":{"tested":58,"pct_proficient":37.5},"5":{"tested":55,"pct_proficient":34.0},"All":{"tested":175,"pct_proficient":37.5}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":58,"pct_proficient":41.5},"4":{"tested":55,"pct_proficient":44.8},"5":{"tested":52,"pct_proficient":38.5},"All":{"tested":165,"pct_proficient":41.6}},
+      "Math":{"3":{"tested":58,"pct_proficient":37.5},"4":{"tested":55,"pct_proficient":34.0},"5":{"tested":52,"pct_proficient":30.5},"All":{"tested":165,"pct_proficient":34.0}}
+    }
+  },
+  "15K038": {
+    "2024": {
+      "ELA": {"3":{"tested":52,"pct_proficient":60.5},"4":{"tested":50,"pct_proficient":63.8},"5":{"tested":48,"pct_proficient":57.2},"All":{"tested":150,"pct_proficient":60.5}},
+      "Math":{"3":{"tested":52,"pct_proficient":62.0},"4":{"tested":50,"pct_proficient":58.5},"5":{"tested":48,"pct_proficient":54.0},"All":{"tested":150,"pct_proficient":58.2}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":50,"pct_proficient":57.0},"4":{"tested":48,"pct_proficient":60.5},"5":{"tested":45,"pct_proficient":54.0},"All":{"tested":143,"pct_proficient":57.2}},
+      "Math":{"3":{"tested":50,"pct_proficient":58.5},"4":{"tested":48,"pct_proficient":55.0},"5":{"tested":45,"pct_proficient":51.0},"All":{"tested":143,"pct_proficient":54.8}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":48,"pct_proficient":53.5},"4":{"tested":45,"pct_proficient":57.0},"5":{"tested":42,"pct_proficient":50.5},"All":{"tested":135,"pct_proficient":53.7}},
+      "Math":{"3":{"tested":48,"pct_proficient":55.0},"4":{"tested":45,"pct_proficient":51.5},"5":{"tested":42,"pct_proficient":47.5},"All":{"tested":135,"pct_proficient":51.3}}
+    }
+  },
+  "15K295": {
+    "2024": {
+      "ELA": {"3":{"tested":45,"pct_proficient":55.0},"4":{"tested":42,"pct_proficient":58.5},"5":{"tested":40,"pct_proficient":52.0},"All":{"tested":127,"pct_proficient":55.2}},
+      "Math":{"3":{"tested":45,"pct_proficient":52.5},"4":{"tested":42,"pct_proficient":49.0},"5":{"tested":40,"pct_proficient":45.5},"All":{"tested":127,"pct_proficient":49.0}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":43,"pct_proficient":52.0},"4":{"tested":40,"pct_proficient":55.0},"5":{"tested":38,"pct_proficient":49.0},"All":{"tested":121,"pct_proficient":52.0}},
+      "Math":{"3":{"tested":43,"pct_proficient":49.5},"4":{"tested":40,"pct_proficient":46.0},"5":{"tested":38,"pct_proficient":42.5},"All":{"tested":121,"pct_proficient":46.0}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":40,"pct_proficient":48.5},"4":{"tested":38,"pct_proficient":51.5},"5":{"tested":35,"pct_proficient":45.5},"All":{"tested":113,"pct_proficient":48.5}},
+      "Math":{"3":{"tested":40,"pct_proficient":46.0},"4":{"tested":38,"pct_proficient":42.5},"5":{"tested":35,"pct_proficient":39.0},"All":{"tested":113,"pct_proficient":42.5}}
+    }
+  },
+  "15K124": {
+    "2024": {
+      "ELA": {"3":{"tested":58,"pct_proficient":50.5},"4":{"tested":55,"pct_proficient":53.8},"5":{"tested":52,"pct_proficient":47.2},"All":{"tested":165,"pct_proficient":50.5}},
+      "Math":{"3":{"tested":58,"pct_proficient":46.5},"4":{"tested":55,"pct_proficient":43.0},"5":{"tested":52,"pct_proficient":39.5},"All":{"tested":165,"pct_proficient":43.0}}
+    },
+    "2023": {
+      "ELA": {"3":{"tested":55,"pct_proficient":47.5},"4":{"tested":52,"pct_proficient":50.5},"5":{"tested":50,"pct_proficient":44.0},"All":{"tested":157,"pct_proficient":47.3}},
+      "Math":{"3":{"tested":55,"pct_proficient":43.5},"4":{"tested":52,"pct_proficient":40.0},"5":{"tested":50,"pct_proficient":36.5},"All":{"tested":157,"pct_proficient":40.0}}
+    },
+    "2022": {
+      "ELA": {"3":{"tested":52,"pct_proficient":44.0},"4":{"tested":50,"pct_proficient":47.0},"5":{"tested":48,"pct_proficient":41.0},"All":{"tested":150,"pct_proficient":44.0}},
+      "Math":{"3":{"tested":52,"pct_proficient":40.0},"4":{"tested":50,"pct_proficient":37.0},"5":{"tested":48,"pct_proficient":33.5},"All":{"tested":150,"pct_proficient":36.8}}
+    }
+  }
+}
