@@ -1,8 +1,16 @@
 /**
  * subway.js — NYC subway lines and stations layer.
  *
- * Fetches GeoJSON from NYC ArcGIS REST API (client-side, no proxy needed).
- * Falls back to local /data/ files if available.
+ * Uses pre-built GeoJSON from MTA GTFS data:
+ *   /data/subway-lines.geojson   — one feature per route (1, 2, A, C, …)
+ *                                    with route_short_name + route_color
+ *   /data/subway-stations.geojson — one feature per station with
+ *                                    stop_name, routes (csv), route_colors (csv)
+ *
+ * Renders each route as its own colored line layer. Where routes share
+ * track, MapLibre's line-offset shifts them into parallel stripes.
+ *
+ * Generate the data with: python3 scripts/build-subway-geojson.py
  *
  * Exposes window.Subway with:
  *   init()  — bind toggle event
@@ -16,24 +24,37 @@ window.Subway = (function () {
   let visible = false;
   let popup = null;
 
-  // ArcGIS REST endpoints (public, no auth)
-  const LINES_URL = 'https://services6.arcgis.com/yG5s3afENB5iO9fj/arcgis/rest/services/Subway_view/FeatureServer/0/query';
-  const STATIONS_URL = 'https://services6.arcgis.com/yG5s3afENB5iO9fj/arcgis/rest/services/SubwayStation_view/FeatureServer/0/query';
-
-  // Official MTA line colors keyed by route symbol
+  // Official MTA route colors (used for station bullets + fallback)
   const MTA_COLORS = {
     '1': '#EE352E', '2': '#EE352E', '3': '#EE352E',
-    '4': '#00933C', '5': '#00933C', '6': '#00933C',
-    '7': '#B933AD',
+    '4': '#00933C', '5': '#00933C', '6': '#00933C', '6X': '#00933C',
+    '7': '#B933AD', '7X': '#B933AD',
     'A': '#2850AD', 'C': '#2850AD', 'E': '#2850AD',
-    'B': '#FF6319', 'D': '#FF6319', 'F': '#FF6319', 'M': '#FF6319',
+    'B': '#FF6319', 'D': '#FF6319', 'F': '#FF6319', 'FX': '#FF6319', 'M': '#FF6319',
     'G': '#6CBE45',
     'J': '#996633', 'Z': '#996633',
     'L': '#A7A9AC',
     'N': '#FCCC0A', 'Q': '#FCCC0A', 'R': '#FCCC0A', 'W': '#FCCC0A',
-    'S': '#808183',
+    'S': '#808183', 'SF': '#808183', 'SR': '#808183', 'H': '#808183',
     'SI': '#1D3C78', 'SIR': '#1D3C78',
     'T': '#00ADD0',
+  };
+
+  // Preferred color ordering by route group (first route letter seen → position)
+  // This just determines which stripe sits left vs right when routes overlap
+  const ROUTE_SORT = {
+    '1': 0, '2': 0, '3': 0,
+    '4': 1, '5': 1, '6': 1, '6X': 1,
+    '7': 2, '7X': 2,
+    'A': 3, 'C': 3, 'E': 3,
+    'B': 4, 'D': 4, 'F': 4, 'FX': 4, 'M': 4,
+    'G': 5,
+    'J': 6, 'Z': 6,
+    'L': 7,
+    'N': 8, 'Q': 8, 'R': 8, 'W': 8,
+    'S': 9, 'SF': 9, 'SR': 9, 'H': 9,
+    'SI': 10, 'SIR': 10,
+    'T': 11,
   };
 
   /* ────────────────── Init ────────────────── */
@@ -42,75 +63,27 @@ window.Subway = (function () {
     document.getElementById('toggle-subway').addEventListener('click', toggle);
   }
 
-  /* ────────────────── Data ────────────────── */
-
-  async function fetchAllFromArcGIS(baseUrl) {
-    // ArcGIS REST API has a per-request record limit (often 1000-2000).
-    // Paginate with resultOffset until we get all features.
-    const allFeatures = [];
-    const pageSize = 2000;
-    let offset = 0;
-
-    while (true) {
-      const params = new URLSearchParams({
-        where: '1=1',
-        outFields: '*',
-        f: 'geojson',
-        resultRecordCount: String(pageSize),
-        resultOffset: String(offset),
-      });
-      const url = baseUrl + '?' + params.toString();
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`ArcGIS request failed: ${res.status}`);
-      const data = await res.json();
-
-      const features = data.features || [];
-      allFeatures.push(...features);
-      console.log(`Subway: page at offset ${offset} returned ${features.length} features`);
-
-      // If we got fewer than pageSize, we've exhausted the dataset
-      if (features.length < pageSize) break;
-      offset += pageSize;
-    }
-
-    return { type: 'FeatureCollection', features: allFeatures };
-  }
-
-  async function fetchGeoJSON(arcgisUrl, localPath) {
-    // Try local file first (fast, no CORS)
-    try {
-      const localRes = await fetch(localPath);
-      if (localRes.ok) {
-        const data = await localRes.json();
-        if (data.type === 'FeatureCollection' && Array.isArray(data.features) && data.features.length > 0) {
-          console.log(`Subway: Loaded ${data.features.length} features from ${localPath}`);
-          return data;
-        }
-      }
-    } catch (e) { /* fall through */ }
-
-    // Fetch from ArcGIS REST API with pagination
-    console.log('Subway: Fetching from ArcGIS REST API...');
-    const data = await fetchAllFromArcGIS(arcgisUrl);
-
-    if (data.features.length === 0) {
-      throw new Error('ArcGIS returned empty result');
-    }
-
-    console.log(`Subway: Total ${data.features.length} features from ArcGIS`);
-    return data;
-  }
+  /* ────────────────── Data loading ────────────────── */
 
   async function loadData() {
     if (loaded) return true;
     try {
-      const [lines, stations] = await Promise.all([
-        fetchGeoJSON(LINES_URL, '/data/subway-lines.geojson'),
-        fetchGeoJSON(STATIONS_URL, '/data/subway-stations.geojson'),
+      const [linesRes, stationsRes] = await Promise.all([
+        fetch('/data/subway-lines.geojson'),
+        fetch('/data/subway-stations.geojson'),
       ]);
-      linesData = lines;
-      stationsData = stations;
-      addSourceAndLayers();
+      if (!linesRes.ok || !stationsRes.ok) {
+        throw new Error('Failed to fetch subway GeoJSON');
+      }
+      linesData = await linesRes.json();
+      stationsData = await stationsRes.json();
+
+      if (!linesData.features || linesData.features.length === 0) {
+        throw new Error('subway-lines.geojson is empty — run scripts/build-subway-geojson.py');
+      }
+
+      console.log(`Subway: ${linesData.features.length} route lines, ${stationsData.features.length} stations`);
+      addLayers();
       loaded = true;
       return true;
     } catch (e) {
@@ -121,92 +94,112 @@ window.Subway = (function () {
 
   /* ────────────────── Layers ────────────────── */
 
-  function getRouteColor(routeStr) {
-    // The ROUTE field may contain multi-line values like "A-C-E" or "1-2-3"
-    // Extract first single character to match color
-    if (!routeStr) return '#999999';
-    const first = routeStr.split('-')[0].split(' ')[0].trim();
-    return MTA_COLORS[first] || '#999999';
-  }
-
-  function buildColorExpression() {
-    // Try rt_symbol first (single letter), then first char of ROUTE field
-    // The ArcGIS data uses ROUTE like "A-C-E", "1-2-3", "G", "L", etc.
-    const expr = ['match', ['coalesce', ['get', 'rt_symbol'], '']];
-
-    for (const [symbol, color] of Object.entries(MTA_COLORS)) {
-      expr.push(symbol, color);
-    }
-    expr.push('#999999');
-    return expr;
-  }
-
-  function buildRouteColorExpression() {
-    // For ArcGIS data where the field is ROUTE (e.g. "A-C-E", "1-2-3", "G")
-    // Use a case expression that checks if ROUTE starts with each letter
-    const cases = ['case'];
-
-    // Group by color to reduce expression size
-    const colorToSymbols = {};
-    for (const [symbol, color] of Object.entries(MTA_COLORS)) {
-      if (!colorToSymbols[color]) colorToSymbols[color] = [];
-      colorToSymbols[color].push(symbol);
-    }
-
-    for (const [color, symbols] of Object.entries(colorToSymbols)) {
-      // Check if the ROUTE field starts with any of these symbols
-      const conditions = symbols.map(s =>
-        ['==', ['slice', ['coalesce', ['get', 'ROUTE'], ['get', 'rt_symbol'], ''], 0, s.length], s]
-      );
-      if (conditions.length === 1) {
-        cases.push(conditions[0], color);
-      } else {
-        cases.push(['any', ...conditions], color);
-      }
-    }
-
-    cases.push('#999999'); // fallback
-    return cases;
-  }
-
-  function addSourceAndLayers() {
+  function addLayers() {
     const map = SchoolMap._getMap();
     if (!map) return;
 
-    map.addSource('subway-lines', {
-      type: 'geojson',
-      data: linesData,
+    const beforeLayer = map.getLayer('housing-for-sale') ? 'housing-for-sale' : 'school-points';
+
+    // ── Group routes by color for stripe offsetting ──
+    // Each feature is one route. Routes with the same color (e.g. 1,2,3 all red)
+    // overlap and don't need offsetting between themselves — they share the same
+    // physical track. Routes with DIFFERENT colors on the same corridor need offset.
+    //
+    // Strategy: add each route as its own source+layer. The color determines
+    // the stripe. Routes of the same color stack perfectly (desired). Different
+    // colors get offset by using MapLibre's sort-key + offset.
+
+    // Sort features by route group for consistent stripe layering
+    // route_short_name may now be comma-separated (e.g. "A,C,E") — use first entry
+    const sortedFeatures = [...linesData.features].sort((a, b) => {
+      const nameA = (a.properties.route_short_name || '').split(',')[0];
+      const nameB = (b.properties.route_short_name || '').split(',')[0];
+      const sa = ROUTE_SORT[nameA] ?? 99;
+      const sb = ROUTE_SORT[nameB] ?? 99;
+      return sa - sb;
     });
 
+    // Group by color — same-color routes share one source for simplicity
+    const byColor = {};
+    for (const feat of sortedFeatures) {
+      const hex = '#' + (feat.properties.route_color || '999999');
+      if (!byColor[hex]) byColor[hex] = [];
+      byColor[hex].push(feat);
+    }
+
+    const colorKeys = Object.keys(byColor);
+    const colorCount = colorKeys.length; // not all are on every corridor, but we use per-layer offset
+
+    // Each color group gets a fixed offset position
+    colorKeys.forEach((color, idx) => {
+      const sourceId = 'subway-route-' + color.replace('#', '');
+      const layerId = 'subway-line-' + color.replace('#', '');
+
+      // Flatten MultiLineString → individual LineString features (Safari compat)
+      const flatFeatures = [];
+      for (const feat of byColor[color]) {
+        if (feat.geometry.type === 'MultiLineString') {
+          for (const coords of feat.geometry.coordinates) {
+            if (coords.length < 2) continue;
+            flatFeatures.push({
+              type: 'Feature',
+              properties: feat.properties,
+              geometry: { type: 'LineString', coordinates: coords },
+            });
+          }
+        } else {
+          flatFeatures.push(feat);
+        }
+      }
+
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: flatFeatures },
+      });
+
+      // Pre-compute offset at each zoom stop (avoids nested '*' expression
+      // which can silently fail in Safari's WebGL/MapLibre)
+      const pos = idx - (colorCount - 1) / 2;
+
+      map.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+          visibility: 'none',
+        },
+        paint: {
+          'line-color': color,
+          'line-width': [
+            'interpolate', ['linear'], ['zoom'],
+            9,  1,
+            12, 1.8,
+            16, 3,
+          ],
+          'line-offset': [
+            'interpolate', ['linear'], ['zoom'],
+            9,  pos * 1.2,
+            12, pos * 2,
+            16, pos * 3.5,
+          ],
+          'line-opacity': 1,
+        },
+      });
+
+      console.log(`Subway layer: ${layerId}, color: ${color}, features: ${flatFeatures.length} (deduped), offset-pos: ${pos.toFixed(1)}`);
+    });
+
+    // Store color keys for toggle
+    _colorKeys = colorKeys;
+    console.log('Subway: added line layers for', colorKeys.length, 'color groups:', colorKeys);
+
+    // ── Stations source ──
     map.addSource('subway-stations', {
       type: 'geojson',
       data: stationsData,
     });
-
-    // Insert below housing or school-points
-    const beforeLayer = map.getLayer('housing-for-sale') ? 'housing-for-sale' : 'school-points';
-
-    // ── Subway lines ──
-    map.addLayer({
-      id: 'subway-lines-layer',
-      type: 'line',
-      source: 'subway-lines',
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round',
-        visibility: 'none',
-      },
-      paint: {
-        'line-color': buildRouteColorExpression(),
-        'line-width': [
-          'interpolate', ['linear'], ['zoom'],
-          9, 1,
-          12, 2.5,
-          16, 4,
-        ],
-        'line-opacity': 0.75,
-      },
-    }, beforeLayer);
 
     // ── Station dots ──
     map.addLayer({
@@ -219,33 +212,33 @@ window.Subway = (function () {
           'interpolate', ['linear'], ['zoom'],
           10, 1.5,
           13, 3,
-          16, 6,
+          16, 5.5,
         ],
         'circle-color': '#ffffff',
-        'circle-stroke-color': '#333333',
+        'circle-stroke-color': '#444444',
         'circle-stroke-width': [
           'interpolate', ['linear'], ['zoom'],
           10, 0.5,
           14, 1.5,
         ],
-        'circle-opacity': 0.9,
+        'circle-opacity': 0.95,
       },
-    }, beforeLayer);
+    });
 
-    // ── Station labels at higher zoom ──
+    // ── Station labels ──
     map.addLayer({
       id: 'subway-station-labels',
       type: 'symbol',
       source: 'subway-stations',
       minzoom: 14,
       layout: {
-        'text-field': ['coalesce', ['get', 'name'], ['get', 'Name'], ['get', 'NAME'], ['get', 'stop_name']],
+        'text-field': ['get', 'stop_name'],
         'text-size': [
           'interpolate', ['linear'], ['zoom'],
           14, 10,
           17, 13,
         ],
-        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
         'text-offset': [0, 1.2],
         'text-anchor': 'top',
         'text-max-width': 10,
@@ -257,26 +250,45 @@ window.Subway = (function () {
         'text-halo-color': '#ffffff',
         'text-halo-width': 1.5,
       },
-    }, beforeLayer);
+    });
 
-    // ── Click handler ──
+    // ── Station click → popup with route bullets ──
     map.on('click', 'subway-stations-layer', (e) => {
       if (!e.features || e.features.length === 0) return;
       const props = e.features[0].properties;
       const coords = e.features[0].geometry.coordinates.slice();
 
-      const stationName = props.name || props.Name || props.NAME || props.stop_name || 'Station';
-      const lines = props.line || props.Line || props.LINE || props.routes || '';
+      const name = props.stop_name || 'Station';
+      const routeStr = props.routes || '';
+      const colorStr = props.route_colors || '';
+      const routeNames = routeStr.split(',').filter(Boolean);
+      const routeColors = colorStr.split(',').filter(Boolean);
+
+      // Build colored bullet circles
+      let bulletsHtml = '';
+      for (let i = 0; i < routeNames.length; i++) {
+        const sym = routeNames[i];
+        const c = '#' + (routeColors[i] || '999999');
+        // Dark text on light backgrounds (yellow, gray)
+        const textColor = isLightColor(c) ? '#000' : '#fff';
+        bulletsHtml += `<span style="
+          display:inline-flex;align-items:center;justify-content:center;
+          width:20px;height:20px;border-radius:50%;
+          background:${c};color:${textColor};
+          font-weight:700;font-size:11px;
+          margin:1px 2px;
+        ">${escapeHtml(sym)}</span>`;
+      }
 
       const html = `
-        <div style="font-family: var(--font); font-size: 13px;">
-          <div style="font-weight: 700; font-size: 14px; margin-bottom: 4px;">${escapeHtml(stationName)}</div>
-          ${lines ? '<div style="color: #64748b;">Lines: ' + escapeHtml(lines) + '</div>' : ''}
+        <div style="font-family:system-ui,sans-serif;font-size:13px;max-width:220px;">
+          <div style="font-weight:700;font-size:14px;margin-bottom:6px;">${escapeHtml(name)}</div>
+          <div style="display:flex;flex-wrap:wrap;">${bulletsHtml}</div>
         </div>
       `;
 
       if (popup) popup.remove();
-      popup = new maplibregl.Popup({ maxWidth: '240px', closeButton: true })
+      popup = new maplibregl.Popup({ maxWidth: '260px', closeButton: true })
         .setLngLat(coords)
         .setHTML(html)
         .addTo(map);
@@ -291,6 +303,9 @@ window.Subway = (function () {
   }
 
   /* ────────────────── Toggle ────────────────── */
+
+  // Track color keys for toggling (set during addLayers)
+  let _colorKeys = [];
 
   async function toggle() {
     visible = !visible;
@@ -316,12 +331,32 @@ window.Subway = (function () {
   function setVisibility(vis) {
     const map = SchoolMap._getMap();
     if (!map) return;
-    for (const id of ['subway-lines-layer', 'subway-stations-layer', 'subway-station-labels']) {
+
+    // Route line layers
+    for (const color of _colorKeys) {
+      const layerId = 'subway-line-' + color.replace('#', '');
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, 'visibility', vis);
+      }
+    }
+
+    // Station layers
+    for (const id of ['subway-stations-layer', 'subway-station-labels']) {
       if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
     }
   }
 
   /* ────────────────── Helpers ────────────────── */
+
+  function isLightColor(hex) {
+    // Parse hex color and compute relative luminance
+    const h = hex.replace('#', '');
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    // Perceived brightness
+    return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+  }
 
   function escapeHtml(str) {
     const div = document.createElement('div');

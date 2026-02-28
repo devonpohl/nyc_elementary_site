@@ -256,9 +256,17 @@ window.SchoolMap = (function () {
       map.getCanvas().style.cursor = '';
     });
 
-    // ── Unified click: school points take priority over zones ──
+    // ── Unified click: subway stations > school points > zones ──
     map.on('click', (e) => {
-      // Check school points first
+      // Check subway stations first (if layer exists and visible)
+      if (map.getLayer('subway-stations-layer')) {
+        const stationFeatures = map.queryRenderedFeatures(e.point, {
+          layers: ['subway-stations-layer'],
+        });
+        if (stationFeatures.length > 0) return; // handled by subway.js click handler
+      }
+
+      // Check school points
       const schoolFeatures = map.queryRenderedFeatures(e.point, {
         layers: ['school-points'],
       });

@@ -1,7 +1,7 @@
 /**
  * isochrone.js — Travel time isochrone rendering.
  *
- * Auto-generates 30–60 min bands in 5-min increments.
+ * 20–60 min bands in 10-min increments.
  *
  * Exposes window.Isochrone with:
  *   init()  — check provider status, bind events
@@ -9,13 +9,13 @@
 window.Isochrone = (function () {
   'use strict';
 
-  // Fixed bands: 30, 35, 40, 45, 50, 55, 60 minutes
-  const BANDS = [30, 35, 40, 45, 50, 55, 60];
+  // Fixed bands: 20, 30, 40, 50, 60 minutes
+  const BANDS = [20, 30, 40, 50, 60];
 
   // Color ramps: index 0 = innermost/smallest (darkest), last = outermost/largest (lightest)
   const COLORS = {
-    driving: ['#1e3a5f', '#1e5488', '#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'],
-    transit: ['#7c2d12', '#9a3412', '#c2410c', '#ea580c', '#f97316', '#fb923c', '#fdba74'],
+    driving: ['#1e3a5f', '#2563eb', '#60a5fa', '#93c5fd', '#dbeafe'],
+    transit: ['#bbf7d0', '#facc15', '#f97316', '#dc2626', '#7c2d12'],
   };
 
   let providerStatus = { driving: false, transit: false };
@@ -55,7 +55,7 @@ window.Isochrone = (function () {
       drivingBtn.disabled = !providerStatus.driving;
       transitBtn.disabled = !providerStatus.transit;
       if (!providerStatus.driving) drivingBtn.title = 'Set ORS_API_KEY to enable';
-      if (!providerStatus.transit) transitBtn.title = 'Set TRAVELTIME_APP_ID & TRAVELTIME_API_KEY to enable';
+      if (!providerStatus.transit) transitBtn.title = 'Set GEOAPIFY_API_KEY to enable';
     }
   }
 
@@ -290,11 +290,8 @@ window.Isochrone = (function () {
   function getFeatureTime(feature) {
     // ORS: feature.properties.value (seconds)
     if (feature.properties.value !== undefined) return feature.properties.value;
-    // TravelTime: feature.properties.search_id = "isochrone_30"
-    if (feature.properties.search_id) {
-      const match = feature.properties.search_id.match(/isochrone_(\d+)/);
-      if (match) return parseInt(match[1], 10) * 60;
-    }
+    // Geoapify: feature.properties.range (seconds)
+    if (feature.properties.range !== undefined) return feature.properties.range;
     return 0;
   }
 
