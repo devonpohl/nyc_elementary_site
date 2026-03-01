@@ -36,6 +36,25 @@ app.use('/api/users/:username/favorites', favoritesRouter);
 app.use('/api/isochrone', isochroneRouter);
 app.use('/api/housing', housingRouter);
 
+// Admin: list users and favorite counts
+app.get('/api/admin/users', (_req, res) => {
+  try {
+    const favPath = path.join(DATA_DIR, 'favorites.json');
+    if (!fs.existsSync(favPath)) {
+      res.json({ users: [] });
+      return;
+    }
+    const data = JSON.parse(fs.readFileSync(favPath, 'utf-8'));
+    const users = Object.entries(data).map(([username, favs]: [string, any]) => ({
+      username,
+      favorites: Object.keys(favs).length,
+    }));
+    res.json({ users, total: users.length });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to read users' });
+  }
+});
+
 // SPA fallback
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
