@@ -1,7 +1,11 @@
 import { Router, Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
 const IS_PROD = process.env.NODE_ENV === 'production';
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../../data');
+const LOGIN_LOG_PATH = path.join(DATA_DIR, 'logins.json');
 
 function normalizeUsername(u: string): string {
   return u.toLowerCase().trim().replace(/[^a-z0-9_-]/g, '');
@@ -40,6 +44,19 @@ router.post('/login', (req: Request, res: Response) => {
     'Set-Cookie',
     `nyc_schools_user=${encodeURIComponent(normalized)}; Path=/; Expires=${expires.toUTCString()}; SameSite=Lax${securePart}`
   );
+
+  // Log the login
+  try {
+    let logins: Record<string, string[]> = {};
+    if (fs.existsSync(LOGIN_LOG_PATH)) {
+      logins = JSON.parse(fs.readFileSync(LOGIN_LOG_PATH, 'utf-8'));
+    }
+    if (!logins[normalized]) logins[normalized] = [];
+    logins[normalized].push(new Date().toISOString());
+    fs.writeFileSync(LOGIN_LOG_PATH, JSON.stringify(logins, null, 2));
+  } catch (e) {
+    console.error('Failed to log login:', e);
+  }
 
   res.json({ ok: true, username: normalized });
 });

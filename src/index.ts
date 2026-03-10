@@ -36,19 +36,29 @@ app.use('/api/users/:username/favorites', favoritesRouter);
 app.use('/api/isochrone', isochroneRouter);
 app.use('/api/housing', housingRouter);
 
-// Admin: list users and favorite counts
+// Admin: list users, favorite counts, and login history
 app.get('/api/admin/users', (_req, res) => {
   try {
     const favPath = path.join(DATA_DIR, 'favorites.json');
-    if (!fs.existsSync(favPath)) {
-      res.json({ users: [] });
-      return;
-    }
-    const data = JSON.parse(fs.readFileSync(favPath, 'utf-8'));
-    const users = Object.entries(data).map(([username, favs]: [string, any]) => ({
+    const loginPath = path.join(DATA_DIR, 'logins.json');
+
+    const favData: Record<string, any> = fs.existsSync(favPath)
+      ? JSON.parse(fs.readFileSync(favPath, 'utf-8'))
+      : {};
+    const loginData: Record<string, string[]> = fs.existsSync(loginPath)
+      ? JSON.parse(fs.readFileSync(loginPath, 'utf-8'))
+      : {};
+
+    // Merge all known usernames
+    const allUsers = new Set([...Object.keys(favData), ...Object.keys(loginData)]);
+    const users = [...allUsers].map((username) => ({
       username,
-      favorites: Object.keys(favs).length,
+      favorites: favData[username] ? Object.keys(favData[username]).length : 0,
+      logins: loginData[username] ? loginData[username].length : 0,
+      last_login: loginData[username]?.slice(-1)[0] || null,
     }));
+
+    users.sort((a, b) => (b.last_login || '').localeCompare(a.last_login || ''));
     res.json({ users, total: users.length });
   } catch (e) {
     res.status(500).json({ error: 'Failed to read users' });
