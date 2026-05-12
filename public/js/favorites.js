@@ -129,7 +129,10 @@ window.Favorites = (function () {
 
     // Sidebar toggle
     document.getElementById('sidebar-toggle').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('collapsed');
+      const sidebar = document.getElementById('sidebar');
+      const toggle = document.getElementById('sidebar-toggle');
+      sidebar.classList.toggle('collapsed');
+      toggle.title = sidebar.classList.contains('collapsed') ? 'Expand sidebar' : 'Collapse sidebar';
     });
 
     // Search input
@@ -404,7 +407,8 @@ window.Favorites = (function () {
 
     // 3-year trend
     if (yearList.length >= 2) {
-      const latestPct = allYears[yearList[0]]?.[subjectKey]?.All?.pct_proficient;
+      // pct is already the latest year's value (extracted above)
+      const latestPct = pct;
       const prevPct = allYears[yearList[1]]?.[subjectKey]?.All?.pct_proficient;
       if (latestPct != null && prevPct != null) {
         const delta = latestPct - prevPct;

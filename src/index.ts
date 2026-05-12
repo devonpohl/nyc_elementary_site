@@ -65,6 +65,11 @@ app.get('/api/admin/users', (_req, res) => {
   }
 });
 
+// Unknown API routes return JSON 404 rather than falling through to the SPA
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
 // SPA fallback
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));

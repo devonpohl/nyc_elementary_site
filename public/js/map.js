@@ -295,13 +295,12 @@ window.SchoolMap = (function () {
     });
 
     // ── Hover cursor ──
+    // Zone hover already sets/clears the cursor via its own listeners; the
+    // school-points listeners only need to flip to pointer on enter. We
+    // intentionally don't clear on leave — the zone-fills mouseleave handler
+    // (above) handles the cleanup when leaving the underlying zone.
     map.on('mouseenter', 'school-points', () => {
       map.getCanvas().style.cursor = 'pointer';
-    });
-    map.on('mouseleave', 'school-points', () => {
-      if (!map.queryRenderedFeatures(map.project(map.getCenter()), { layers: ['zone-fills'] }).length) {
-        map.getCanvas().style.cursor = '';
-      }
     });
   }
 

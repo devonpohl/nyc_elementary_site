@@ -1,10 +1,17 @@
 node_modules/
 dist/
 .env
+.DS_Store
 
 # User data — lives on Railway volume, not in repo
 data/favorites.json
 data/housing-cache.json
+data/logins.json
+data/isochrone-cache.json
+
+# Raw source data — re-downloadable via scripts/, not tracked
+data/*.xlsx
+data/*.zip
 
 # Raw source GeoJSON (processed versions are in data/)
 *.geojson

@@ -98,7 +98,11 @@ window.Subway = (function () {
     const map = SchoolMap._getMap();
     if (!map) return;
 
-    const beforeLayer = map.getLayer('housing-for-sale') ? 'housing-for-sale' : 'school-points';
+    // Subway lines render below housing (if present) and schools so the
+    // school markers and house icons remain prominent.
+    const beforeLayer = map.getLayer('housing-for-sale')
+      ? 'housing-for-sale'
+      : (map.getLayer('school-points') ? 'school-points' : undefined);
 
     // ── Group routes by color for stripe offsetting ──
     // Each feature is one route. Routes with the same color (e.g. 1,2,3 all red)
@@ -186,7 +190,7 @@ window.Subway = (function () {
           ],
           'line-opacity': 1,
         },
-      });
+      }, beforeLayer);
 
       console.log(`Subway layer: ${layerId}, color: ${color}, features: ${flatFeatures.length} (deduped), offset-pos: ${pos.toFixed(1)}`);
     });

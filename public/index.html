@@ -118,7 +118,9 @@
           <h3>Travel Time</h3>
           <form id="iso-address-form">
             <input type="text" id="iso-address-input" placeholder="Enter origin address...">
+            <div id="iso-address-hint" class="iso-address-hint hidden">Press Enter to search</div>
           </form>
+          <div id="iso-status" class="hidden"></div>
           <div id="iso-controls">
             <button id="iso-driving-btn" class="iso-mode-btn" disabled>Driving</button>
             <button id="iso-transit-btn" class="iso-mode-btn" disabled>Transit</button>
@@ -133,7 +135,6 @@
               <option value="1.0">None (free-flow)</option>
             </select>
           </div>
-          <div id="iso-status" class="hidden"></div>
           <div id="iso-legend" class="hidden"></div>
         </div>
 
@@ -243,8 +244,8 @@
               <div class="source-name">Housing Listings</div>
               <div class="source-detail">
                 <a href="https://rapidapi.com/apidojo/api/realty-in-us" target="_blank" rel="noopener">Realty in US API</a>
-                via RapidAPI (apidojo). For-sale and recently-sold listings queried by zip code
-                (11231, 11201, 11205, 11238, 11215, 11217, 11216).
+                via RapidAPI (apidojo). For-sale and recently-sold listings queried by the zip codes
+                configured in the <code>HOUSING_ZIP_CODES</code> environment variable.
                 Filtered server-side to 3+ bed, 1,500+ sqft; sold homes limited to last 12 months.
                 Cached daily in <code>data/housing-cache.json</code>. Deduplicated by property ID.
               </div>
@@ -262,9 +263,9 @@
             <div class="source-item">
               <div class="source-name">Transit Isochrones</div>
               <div class="source-detail">
-                <a href="https://traveltime.com/" target="_blank" rel="noopener">TravelTime API</a>
-                <code>/v4/time-map</code>.
-                Public transport isochrones incorporating subway, bus, and walking. Requires approved API key.
+                <a href="https://www.geoapify.com/isoline-api" target="_blank" rel="noopener">Geoapify Isoline API</a>
+                <code>/v1/isoline</code>.
+                Public transport isochrones incorporating subway, bus, and walking. Requires <code>GEOAPIFY_API_KEY</code>.
               </div>
             </div>
 

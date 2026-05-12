@@ -10,9 +10,13 @@ const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, '../../data');
 const CACHE_PATH = path.join(DATA_DIR, 'housing-cache.json');
 const CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// Default zip list when no caller-provided list. Per-user zip lists will
+// eventually flow through callers instead of this env var.
+const DEFAULT_ZIPS_ENV = process.env.HOUSING_ZIP_CODES || '';
+
 interface GeoJSONFeature {
   type: 'Feature';
-  geometry: { type: string; coordinates: number[] };
+  geometry: { type: 'Point'; coordinates: [number, number] };
   properties: Record<string, any>;
 }
 
@@ -103,15 +107,8 @@ function isCacheStale(): boolean {
 
 // ── API fetching ──
 
-// Optional: set HOUSING_ZIP_CODES in .env as comma-separated list to narrow results
-// e.g. HOUSING_ZIP_CODES=10001,10002,10003,11201,11215
-const ZIP_CODES_ENV = process.env.HOUSING_ZIP_CODES || '';
-
-// All NYC counties (boroughs) for FIPS-based filtering
-const NYC_COUNTIES = ['New York', 'Kings', 'Queens', 'Bronx', 'Richmond'];
-
-function getZipCodes(): string[] {
-  return ZIP_CODES_ENV.split(',').map(z => z.trim()).filter(Boolean);
+function getDefaultZips(): string[] {
+  return DEFAULT_ZIPS_ENV.split(',').map(z => z.trim()).filter(Boolean);
 }
 
 async function fetchForZip(
@@ -126,7 +123,7 @@ async function fetchForZip(
     const offset = page * limit;
     console.log(`  [${zip}] ${status} page ${page + 1} (offset ${offset})...`);
 
-    const body: any = {
+    const body = {
       limit,
       offset,
       status: [status === 'recently_sold' ? 'sold' : status],
@@ -154,7 +151,6 @@ async function fetchForZip(
       }
 
       const data: any = await response.json();
-      // Log raw response structure on first page for debugging
       if (page === 0) {
         const topKeys = Object.keys(data || {});
         console.log(`  [${zip}] Response keys: ${topKeys.join(', ')}`);
@@ -186,80 +182,26 @@ async function fetchForZip(
   return allResults;
 }
 
-async function fetchListings(status: 'for_sale' | 'recently_sold'): Promise<any[]> {
-  const zips = getZipCodes();
-
-  if (zips.length > 0) {
-    // Query each zip individually — guarantees the field name works
-    const allResults: any[] = [];
-    for (const zip of zips) {
-      const results = await fetchForZip(status, zip, 3); // up to 600 per zip
-      allResults.push(...results);
-      await new Promise(resolve => setTimeout(resolve, 1200));
-    }
-    console.log(`  Total ${status} across ${zips.length} zips: ${allResults.length}`);
-    return allResults;
+/**
+ * Fetch listings for an explicit zip list. This is the seam for future
+ * per-user zip codes — callers pass the zips they care about.
+ */
+async function fetchListingsForZips(
+  status: 'for_sale' | 'recently_sold',
+  zips: string[],
+): Promise<any[]> {
+  if (zips.length === 0) {
+    console.warn(`Housing: no zip codes provided for ${status}; skipping.`);
+    return [];
   }
 
-  // Fallback: broad NYC query
-  console.log('  No HOUSING_ZIP_CODES set, using broad NYC query');
-  return fetchForZip(status, '', 5);
-}
-
-// Fallback for no-zip broad query — override body for city-based search
-const _origFetchForZip = fetchForZip;
-// Patch: if zip is empty string, use city-based query instead
-async function fetchListingsBroad(status: 'for_sale' | 'recently_sold', maxPages: number): Promise<any[]> {
   const allResults: any[] = [];
-  const limit = 200;
-
-  for (let page = 0; page < maxPages; page++) {
-    const offset = page * limit;
-    console.log(`  [NYC] ${status} page ${page + 1} (offset ${offset})...`);
-
-    try {
-      const response = await fetch('https://realty-in-us.p.rapidapi.com/properties/v3/list', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-RapidAPI-Key': RAPIDAPI_KEY,
-          'X-RapidAPI-Host': RAPIDAPI_HOST,
-        },
-        body: JSON.stringify({
-          limit,
-          offset,
-          status: [status === 'recently_sold' ? 'sold' : status],
-          city: 'New York City',
-          state_code: 'NY',
-          sort: { direction: 'desc', field: 'list_date' },
-          beds_min: 3,
-          sqft_min: 1500,
-        }),
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error(`  [NYC] RapidAPI error (${response.status}):`, errText.substring(0, 300));
-        break;
-      }
-
-      const data: any = await response.json();
-      const total = data?.data?.home_search?.total ?? '?';
-      const results = data?.data?.home_search?.results || [];
-
-      if (page === 0) console.log(`  [NYC] API reports ${total} total ${status}`);
-      if (results.length === 0) break;
-
-      allResults.push(...results);
-      console.log(`  [NYC] Got ${results.length} (total: ${allResults.length})`);
-
-      if (results.length < limit) break;
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    } catch (e) {
-      console.error(`  [NYC] Fetch error:`, e);
-      break;
-    }
+  for (const zip of zips) {
+    const results = await fetchForZip(status, zip, 3); // up to 600 per zip
+    allResults.push(...results);
+    await new Promise(resolve => setTimeout(resolve, 1200));
   }
+  console.log(`  Total ${status} across ${zips.length} zips: ${allResults.length}`);
   return allResults;
 }
 
@@ -325,13 +267,18 @@ function propertyToFeature(prop: any, status: string): GeoJSONFeature | null {
   };
 }
 
-async function refreshCache(): Promise<void> {
-  console.log('Housing: Starting cache refresh...');
+/**
+ * Build a GeoJSON cache from the given zip list. Currently called with the
+ * env-var defaults; in the future a per-user variant can call this with
+ * a user-specific zip list and write to a per-user cache path.
+ */
+async function buildCacheForZips(zips: string[]): Promise<HousingCache> {
+  console.log(`Housing: building cache for ${zips.length} zip(s): ${zips.join(', ') || '(none)'}`);
 
   // Sequential to avoid rate limiting (free tier is strict)
-  const forSaleRaw = await fetchListings('for_sale');
+  const forSaleRaw = await fetchListingsForZips('for_sale', zips);
   await new Promise(resolve => setTimeout(resolve, 2000));
-  const soldRaw = await fetchListings('recently_sold');
+  const soldRaw = await fetchListingsForZips('recently_sold', zips);
 
   const features: GeoJSONFeature[] = [];
 
@@ -339,8 +286,7 @@ async function refreshCache(): Promise<void> {
     const feat = propertyToFeature(prop, 'for_sale');
     if (feat) features.push(feat);
   }
-
-  let forSaleCount = features.length;
+  const forSaleConverted = features.length;
 
   // Filter sold homes to last 12 months
   const oneYearAgo = new Date();
@@ -354,20 +300,26 @@ async function refreshCache(): Promise<void> {
     if (soldDate && soldDate < oneYearAgoStr) continue; // skip older than 1 year
     features.push(feat);
   }
+  const soldConvertedKept = features.length - forSaleConverted;
+  console.log(`Housing: Filtered sold to last 12 months — kept ${soldConvertedKept} of ${soldRaw.length} raw sold listings`);
 
-  let soldCount = features.length - forSaleCount;
-  console.log(`Housing: Filtered sold to last 12 months — kept ${soldCount} of ${soldRaw.length} raw sold listings`);
-
-  // Deduplicate by property_id
+  // Deduplicate by property_id (keep items without id; drop dupes with id)
   const seen = new Set<string>();
   const deduped = features.filter(f => {
     const id = f.properties?.property_id;
-    if (!id || seen.has(id)) return !id; // keep items without id, skip dupes
+    if (!id) return true;
+    if (seen.has(id)) return false;
     seen.add(id);
     return true;
   });
 
-  const cache: HousingCache = {
+  // Post-dedup counts so reported numbers match what's actually in the cache
+  const forSaleCount = deduped.filter(f => f.properties.status === 'for_sale').length;
+  const soldCount = deduped.filter(f => f.properties.status === 'recently_sold').length;
+
+  console.log(`Housing: Cache built — ${forSaleCount} for sale, ${soldCount} recently sold, ${deduped.length} total features.`);
+
+  return {
     timestamp: Date.now(),
     forSaleCount,
     soldCount,
@@ -376,20 +328,25 @@ async function refreshCache(): Promise<void> {
       features: deduped,
     },
   };
-
-  saveCache(cache);
-  console.log(`Housing: Cache refreshed — ${forSaleCount} for sale, ${soldCount} recently sold, ${deduped.length} total features.`);
 }
 
-// ── Auto-refresh on startup + interval ──
+async function refreshCache(): Promise<void> {
+  const zips = getDefaultZips();
+  const cache = await buildCacheForZips(zips);
+  saveCache(cache);
+}
+
+// ── Startup hook ──
 
 export function initHousingRefresh(): void {
   if (!RAPIDAPI_KEY) {
-    console.log('Housing: RAPIDAPI_KEY not set, skipping auto-refresh.');
+    console.log('Housing: RAPIDAPI_KEY not set, skipping startup refresh.');
     return;
   }
 
-  // Refresh on startup if cache is stale
+  // Refresh on startup if cache is missing/stale. The external Railway
+  // cron service (cron/refresh-housing.sh) handles periodic refreshes
+  // by hitting /api/housing/refresh on a schedule — no in-process timer.
   if (isCacheStale()) {
     console.log('Housing: Cache is stale, refreshing...');
     refreshCache().catch(e => console.error('Housing startup refresh failed:', e));
@@ -397,12 +354,6 @@ export function initHousingRefresh(): void {
     const cache = loadCache();
     console.log(`Housing: Using cached data (${cache?.geojson?.features?.length || 0} listings, ${Math.round((Date.now() - (cache?.timestamp || 0)) / 60000)} min old)`);
   }
-
-  // Schedule daily refresh
-  setInterval(() => {
-    console.log('Housing: Scheduled daily refresh...');
-    refreshCache().catch(e => console.error('Housing scheduled refresh failed:', e));
-  }, CACHE_MAX_AGE_MS);
 }
 
 export default router;
