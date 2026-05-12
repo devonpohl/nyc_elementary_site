@@ -22,6 +22,8 @@ window.Isochrone = (function () {
   let originMarker = null;
   let currentOrigin = null; // { lat, lng, label }
   let activeMode = null;
+  let lastSearchedQuery = ''; // tracks the address most recently submitted
+  let selectedBands = new Set(); // minute values currently shown on the map
 
   /* ────────────────── Init ────────────────── */
 
@@ -41,34 +43,67 @@ window.Isochrone = (function () {
   }
 
   function updateUI() {
-    const drivingBtn = document.getElementById('iso-driving-btn');
-    const transitBtn = document.getElementById('iso-transit-btn');
     const statusEl = document.getElementById('iso-status');
 
     if (!providerStatus.driving && !providerStatus.transit) {
-      statusEl.textContent = 'Set ORS_API_KEY (driving) or TravelTime keys (transit) to enable.';
+      statusEl.textContent = 'Set ORS_API_KEY (driving) or GEOAPIFY_API_KEY (transit) to enable.';
       statusEl.classList.remove('hidden');
-      drivingBtn.disabled = true;
-      transitBtn.disabled = true;
     } else {
       statusEl.classList.add('hidden');
-      drivingBtn.disabled = !providerStatus.driving;
-      transitBtn.disabled = !providerStatus.transit;
-      if (!providerStatus.driving) drivingBtn.title = 'Set ORS_API_KEY to enable';
-      if (!providerStatus.transit) transitBtn.title = 'Set GEOAPIFY_API_KEY to enable';
     }
+
+    // Mode buttons stay disabled until an address is resolved
+    updateModeButtonsAvailability();
+
     // Hide traffic selector until driving mode is active
     document.getElementById('iso-traffic').style.display = 'none';
+  }
+
+  function updateModeButtonsAvailability() {
+    const drivingBtn = document.getElementById('iso-driving-btn');
+    const transitBtn = document.getElementById('iso-transit-btn');
+    const hasOrigin = !!currentOrigin;
+
+    drivingBtn.disabled = !hasOrigin || !providerStatus.driving;
+    transitBtn.disabled = !hasOrigin || !providerStatus.transit;
+
+    if (!providerStatus.driving) {
+      drivingBtn.title = 'Set ORS_API_KEY to enable';
+    } else if (!hasOrigin) {
+      drivingBtn.title = 'Enter an address first';
+    } else {
+      drivingBtn.title = '';
+    }
+
+    if (!providerStatus.transit) {
+      transitBtn.title = 'Set GEOAPIFY_API_KEY to enable';
+    } else if (!hasOrigin) {
+      transitBtn.title = 'Enter an address first';
+    } else {
+      transitBtn.title = '';
+    }
   }
 
   /* ────────────────── Events ────────────────── */
 
   function bindEvents() {
+    const addressInput = document.getElementById('iso-address-input');
+    const addressHint = document.getElementById('iso-address-hint');
+
+    // Show "Press Enter to search" hint when the input has unsubmitted text
+    addressInput.addEventListener('input', () => {
+      const val = addressInput.value.trim();
+      const unsearched = val.length > 0 && val !== lastSearchedQuery;
+      addressHint.classList.toggle('hidden', !unsearched);
+    });
+
     // Address search
     document.getElementById('iso-address-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const input = document.getElementById('iso-address-input');
-      await geocodeAndSetOrigin(input.value.trim());
+      const query = addressInput.value.trim();
+      lastSearchedQuery = query;
+      addressHint.classList.add('hidden');
+      await geocodeAndSetOrigin(query);
     });
 
     // Mode buttons
@@ -121,9 +156,8 @@ window.Isochrone = (function () {
       placeOriginMarker(currentOrigin);
       statusEl.textContent = best.display_name.split(',').slice(0, 3).join(',');
 
-      // Enable mode buttons
-      document.getElementById('iso-driving-btn').disabled = !providerStatus.driving;
-      document.getElementById('iso-transit-btn').disabled = !providerStatus.transit;
+      // Enable mode buttons now that we have a resolved origin
+      updateModeButtonsAvailability();
     } catch (e) {
       statusEl.textContent = 'Geocoding failed. Try again.';
       console.error('Geocode error:', e);
@@ -302,18 +336,72 @@ window.Isochrone = (function () {
     const container = document.getElementById('iso-legend');
     // Show bands from smallest (innermost) to largest (outermost)
     const reversed = [...features].reverse();
-    let html = '';
-    reversed.forEach((f, i) => {
+    const allMinutes = reversed.map(f => f.properties.band_minutes);
+
+    // Default: select only the 30-minute band (or the closest one if 30 isn't present)
+    const defaultMins = allMinutes.includes(30)
+      ? 30
+      : allMinutes[Math.floor(allMinutes.length / 2)];
+    selectedBands = new Set([defaultMins]);
+
+    let pillsHtml = '';
+    reversed.forEach((f) => {
       const mins = f.properties.band_minutes;
       const bandIdx = f.properties.band_index;
       const colorIdx = colors.length - 1 - Math.min(bandIdx, colors.length - 1);
-      html += `<span class="iso-legend-item">
+      const cls = selectedBands.has(mins) ? 'selected' : 'deselected';
+      pillsHtml += `<span class="iso-legend-item ${cls}" data-mins="${mins}" role="button" tabindex="0" title="Click to toggle ${mins}-minute band">
         <span class="iso-legend-swatch" style="background:${colors[colorIdx]}"></span>
         ${mins}m
       </span>`;
     });
-    container.innerHTML = html;
+
+    container.innerHTML = `
+      <div class="iso-legend-prompt">Click to show / hide bands on the map</div>
+      <div class="iso-legend-pills">${pillsHtml}</div>
+    `;
     container.classList.remove('hidden');
+
+    container.querySelectorAll('.iso-legend-item').forEach((el) => {
+      el.addEventListener('click', () => toggleBand(el));
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          toggleBand(el);
+        }
+      });
+    });
+
+    // Apply the default filter so the map matches the pill selection on first render
+    applyBandFilter();
+  }
+
+  function toggleBand(el) {
+    const mins = parseInt(el.dataset.mins, 10);
+    if (selectedBands.has(mins)) {
+      selectedBands.delete(mins);
+      el.classList.remove('selected');
+      el.classList.add('deselected');
+    } else {
+      selectedBands.add(mins);
+      el.classList.add('selected');
+      el.classList.remove('deselected');
+    }
+    applyBandFilter();
+  }
+
+  function applyBandFilter() {
+    const map = SchoolMap._getMap();
+    if (!map) return;
+
+    const selectedArr = [...selectedBands];
+    // No bands selected → hide everything via a never-matching filter
+    const filter = selectedArr.length === 0
+      ? ['==', ['get', 'band_minutes'], -1]
+      : ['match', ['get', 'band_minutes'], selectedArr, true, false];
+
+    if (map.getLayer('isochrone-fill')) map.setFilter('isochrone-fill', filter);
+    if (map.getLayer('isochrone-outline')) map.setFilter('isochrone-outline', filter);
   }
 
   /* ────────────────── Clearing ────────────────── */
@@ -331,11 +419,17 @@ window.Isochrone = (function () {
     activeMode = null;
 
     document.getElementById('iso-address-input').value = '';
+    document.getElementById('iso-address-hint').classList.add('hidden');
+    lastSearchedQuery = '';
     document.getElementById('iso-status').classList.add('hidden');
     document.getElementById('iso-legend').classList.add('hidden');
     document.getElementById('iso-legend').innerHTML = '';
     document.getElementById('iso-driving-btn').classList.remove('active');
     document.getElementById('iso-transit-btn').classList.remove('active');
+    document.getElementById('iso-traffic').style.display = 'none';
+
+    // Roll mode buttons back to disabled since we no longer have an origin
+    updateModeButtonsAvailability();
   }
 
   function clearIsochroneLayers(map) {
